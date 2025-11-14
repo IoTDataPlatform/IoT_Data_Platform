@@ -14,11 +14,6 @@
     "redis.key.prefix": "vehpos",
     "ttl.seconds": "600",
 
-    "key.converter": "org.apache.kafka.connect.storage.StringConverter",
-
-    "value.converter": "org.apache.kafka.connect.json.JsonConverter",
-    "value.converter.schemas.enable": "true",
-
     "errors.tolerance": "all",
     "errors.log.enable": "true",
     "errors.log.include.messages": "true"

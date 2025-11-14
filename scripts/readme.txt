@@ -115,3 +115,12 @@ Makefile
 - Если значения в Redis не появляются: проверьте, что топик, указанный в sink-конфиге, совпадает с топиком из source.
 - Большие сообщения: при необходимости увеличьте лимиты клиента у Kafka Connect (PRODUCER_MAX_REQUEST_SIZE и т.д.).
 - Конвертеры: в конфигурации коннекторов используется JsonConverter с schemas.enable=true; это совместимо с Struct из Kafka Connect API.
+
+* распаковать gtfs.zip -> каталог
+- make unzip
+- (или: make unzip GTFS_ZIP=./gtfs-data/x.zip GTFS_DIR=./gtfs-data/x)
+* загрузить gtfs в бд
+- make load-gtfs
+- (или: make load GTFS_DIR=./gtfs-data/x)
+* очистить бд, не останавливая контейнер
+- make clean-gtfs-database

@@ -12,6 +12,15 @@ INGESTOR_JSON        := $(CONNECTORS_CONFIGS_DIR)/$(INGESTOR_NAME).json
 POSITION_CACHE_JSON  := $(CONNECTORS_CONFIGS_DIR)/$(POSITION_CACHE_NAME).json
 FILE_SINK_JSON       := $(CONNECTORS_CONFIGS_DIR)/$(FILE_SINK_NAME).json
 
+DB_CONTAINER ?= postgres
+PGUSER ?= app
+PGPASSWORD ?= app
+PGDATABASE ?= gtfs
+
+GTFS_IMAGE ?= ghcr.io/public-transport/gtfs-via-postgres
+GTFS_DIR ?= ./gtfs-data/sl_gtfs
+GTFS_ZIP ?= ./gtfs-data/sl_gtfs.zip
+
 define create_connector
 	curl -fsS -o /dev/null -w "%{http_code}" -X POST \
 	  -H 'Content-Type: application/json' \
@@ -39,7 +48,7 @@ define restart_connector
 	  $(CONNECT_URL)/connectors/$(1)/restart
 endef
 
-.PHONY: up down clean-volumes restart logs ps
+.PHONY: up down clean-volumes restart logs ps clean-gtfs-database load-gtfs unzip
 up:
 	$(DC) up -d
 
@@ -149,6 +158,25 @@ enable-all: enable-gtfs-rt-ingestor-source enable-position-cache-redis-sink
 
 disable-all: disable-gtfs-rt-ingestor-source disable-position-cache-redis-sink disable-filedump-sink
 	@echo "All connectors disabled."
+
+clean-gtfs-database:
+	docker exec -i $(DB_CONTAINER) env PGPASSWORD=$(PGPASSWORD) \
+		psql -U $(PGUSER) -d postgres -c "DROP DATABASE IF EXISTS \"$(PGDATABASE)\";"
+	docker exec -i $(DB_CONTAINER) env PGPASSWORD=$(PGPASSWORD) \
+		psql -U $(PGUSER) -d postgres -c "CREATE DATABASE \"$(PGDATABASE)\";"
+
+unzip:
+	@test -f "$(GTFS_ZIP)" || (echo "✗ GTFS_ZIP '$(GTFS_ZIP)' не найден"; exit 1)
+	mkdir -p "$(GTFS_DIR)"
+	unzip -o "$(GTFS_ZIP)" -d "$(GTFS_DIR)"
+
+load-gtfs:
+	@until docker exec $(DB_CONTAINER) pg_isready -U $(PGUSER) -d $(PGDATABASE) >/dev/null 2>&1; do sleep 1; done
+	docker run --rm \
+	  -v "$(GTFS_DIR)":/gtfs \
+	  $(GTFS_IMAGE) \
+	  --require-dependencies --ignore-unsupported -- '/gtfs/*.txt' \
+	  | docker exec -i $(DB_CONTAINER) env PGPASSWORD=$(PGPASSWORD) psql -U $(PGUSER) -d $(PGDATABASE) -b
 
 help:
 	@echo "Commands:"

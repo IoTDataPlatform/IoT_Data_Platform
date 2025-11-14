@@ -1,0 +1,27 @@
+package iot.data.platform.avro;
+
+import org.apache.avro.Schema;
+
+public final class VehiclePositionSchemas {
+
+    private VehiclePositionSchemas() {}
+
+    private static final String VEHICLE_POSITION_SCHEMA_JSON = """
+            {
+              "type": "record",
+              "name": "VehiclePosition",
+              "namespace": "iot.data.platform.avro",
+              "fields": [
+                { "name": "agency",       "type": "string" },
+                { "name": "business_day", "type": "string" },
+                { "name": "vehicle_id",   "type": ["null", "string"], "default": null },
+                { "name": "trip_id",      "type": ["null", "string"], "default": null },
+                { "name": "latitude",     "type": "double" },
+                { "name": "longitude",    "type": "double" },
+                { "name": "ts_ms",        "type": "long" }
+              ]
+            }
+            """;
+
+    public static final Schema VEHICLE_POSITION_SCHEMA = new Schema.Parser().parse(VEHICLE_POSITION_SCHEMA_JSON);
+}

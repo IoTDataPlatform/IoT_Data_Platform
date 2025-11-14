@@ -66,7 +66,7 @@ public class FeedSourceConnector extends SourceConnector {
                 .define(CFG_FETCH_ACCEPT_ENCODING, ConfigDef.Type.STRING, null, ConfigDef.Importance.LOW,
                         "Override Accept-Encoding header")
                 .define(CFG_FETCH_HEADERS, ConfigDef.Type.STRING, null, ConfigDef.Importance.LOW,
-                        "Extra headers: \"K=V,K2:V2\" (comma/semicolon separated; '=' или ':')")
+                        "Extra headers: \"K=V,K2:V2\" (comma/semicolon separated; '=' or ':')")
                 .define(CFG_FETCH_CONDITIONAL_GET, ConfigDef.Type.BOOLEAN, null, ConfigDef.Importance.LOW,
                         "Use conditional GET (ETag/If-Modified-Since)")
                 .define(CFG_FETCH_DECOMPRESSION, ConfigDef.Type.STRING, null, ConfigDef.Importance.LOW,

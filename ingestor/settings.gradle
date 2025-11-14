@@ -1,1 +1,3 @@
 rootProject.name = 'ingestor'
+
+includeBuild '../common'

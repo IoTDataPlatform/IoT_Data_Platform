@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.connect.data.Field;
-import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.data.Struct;
 import org.apache.kafka.connect.sink.SinkRecord;
 import org.apache.kafka.connect.sink.SinkTask;
@@ -18,11 +17,17 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.Base64;
 
 public class FileDumpSinkTask extends SinkTask {
-    private final ObjectMapper mapper = new ObjectMapper();
 
+    private final ObjectMapper mapper = new ObjectMapper();
     private BufferedWriter writer;
+
+    @Override
+    public String version() {
+        return "1.0";
+    }
 
     @Override
     public void start(Map<String, String> props) {
@@ -48,8 +53,14 @@ public class FileDumpSinkTask extends SinkTask {
             try {
                 Map<String, Object> line = new LinkedHashMap<>();
 
-                Object normKey = normalize(rec.key(), rec.keySchema());
-                Object normValue = normalize(rec.value(), rec.valueSchema());
+                line.put("topic", rec.topic());
+                line.put("partition", rec.kafkaPartition());
+                line.put("offset", rec.kafkaOffset());
+                line.put("timestamp", rec.timestamp());
+
+                Object normKey = normalize(rec.key());
+                Object normValue = normalize(rec.value());
+
                 line.put("key", normKey);
                 line.put("value", normValue);
 
@@ -63,7 +74,7 @@ public class FileDumpSinkTask extends SinkTask {
         try {
             writer.flush();
         } catch (IOException e) {
-            System.err.println("[FileDumpSink] Failed to process record: " + e.getMessage());
+            System.err.println("[FileDumpSink] Flush warning: " + e.getMessage());
         }
     }
 
@@ -71,14 +82,14 @@ public class FileDumpSinkTask extends SinkTask {
         return mapper.writeValueAsString(obj);
     }
 
-    private Object normalize(Object value, Schema schema) {
+    private Object normalize(Object value) {
         if (value == null) return null;
 
         if (value instanceof Struct s) {
             Map<String, Object> map = new LinkedHashMap<>();
             for (Field f : s.schema().fields()) {
                 Object v = s.get(f);
-                map.put(f.name(), normalize(v, f.schema()));
+                map.put(f.name(), normalize(v));
             }
             return map;
         }
@@ -125,10 +136,5 @@ public class FileDumpSinkTask extends SinkTask {
         } catch (IOException e) {
             System.err.println("[FileDumpSink] Close warning: " + e.getMessage());
         }
-    }
-
-    @Override
-    public String version() {
-        return "1.0";
     }
 }
