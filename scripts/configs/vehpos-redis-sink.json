@@ -7,7 +7,7 @@
 
     "redis.uri": "redis://redis:6379",
     "redis.type": "HASH",
-    "redis.keyspace": "gtfs:vehicle",
+    "redis.keyspace": "vehpos:SL",
     "redis.key.ttl": "120",
 
     "key.converter": "org.apache.kafka.connect.storage.StringConverter",
